@@ -1,54 +1,51 @@
-<?php
-include_once("config.php");
-include_once("includes/class.comms.php");
+<html>
+	<head>
+		<title>Test page</title>
+	</head>
+	<body>
+		<div id="currently_playing"></div>
 
-$comms = new comms();
+		<script type="text/javascript">
+			var lastfm = {
+				nowPlaying: function(){
+					return new Promise (function(resolve, reject) {
+						var xhr = new XMLHttpRequest();
+						xhr.onload = function () {
+							if (xhr.readyState === xhr.DONE && xhr.status === 200) {
+								var response = JSON.parse(xhr.responseText);
+								resolve(response);
+							} else {
+								reject(response);
+							}
+						}
+						xhr.open('GET', '/fetch-playing.php', true);
+						xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+						xhr.send();
+					});
+				}
+			}
+			window.addEventListener("load", function(e){
+				function displayCurrentlyPlaying(){
+					var currently_playing = document.getElementById("currently_playing");
+					if(currently_playing){
+						lastfm.nowPlaying().then(function(result){
+							if(result.elapsed_time != null){
+								currently_playing.innerHTML = result.name + " by " + result.artist + " - " + result.elapsed_time;
+							} else {
+								currently_playing.innerHTML = result.name + " by " + result.artist;
+							}
+						}, function(error){
+							console.log(error);
+						});
+					}
+				}
 
-$body_string = "method=user.getrecenttracks&user=aaronpfisher&api_key=" . $api_key . "&format=json";
-
-$recent_tracks = $comms->get($base_url, $body_string);
-$recent_tracks = json_decode($recent_tracks, true);
-
-if(count($recent_tracks) > 0){
-	$last_track = $recent_tracks["recenttracks"]["track"][0];
-	if(!empty($last_track)){
-		echo $last_track["name"] . " by " . $last_track["artist"]["#text"];
-
-		echo getElapsedTime((int)$last_track["date"]["uts"]);
-
-	}
-
-	echo "<pre>";
-	print_r($last_track);
-	echo "</pre>";
-	
-}
-
-function getElapsedTime($fixed_time){
-	if(!is_numeric($time))
-		$time = strtotime($time);
-
-	$periods = array("second", "minute", "hour", "day", "week", "month", "year", "age");
-	$lengths = array("60","60","24","7","4.35","12","100");
-
-	$now = time();
-
-	$difference = $now - $time;
-	if ($difference <= 10 && $difference >= 0)
-		return $tense = 'just now';
-	elseif($difference > 0)
-		$tense = 'ago';
-	elseif($difference < 0)
-		$tense = 'later';
-
-	for($j = 0; $difference >= $lengths[$j] && $j < count($lengths)-1; $j++) {
-		$difference /= $lengths[$j];
-	}
-
-	$difference = round($difference);
-
-	$period =  $periods[$j] . ($difference >1 ? 's' :'');
-	return "{$difference} {$period} {$tense} ";
-}
-
-?>
+				displayCurrentlyPlaying();
+				setInterval(() => {
+					console.log("Refresh!");
+					displayCurrentlyPlaying();
+				}, 90000);
+			});
+		</script>
+	</body>
+</html>
