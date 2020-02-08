@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:			Last.fm recent
- * Plugin URI:			https://github.com/AaronF/lastfm-currentlyplaying-wordpress
+ * Plugin URI:			https://github.com/AaronF/lastfm-nowplaying-wordpress
  * Description:			Display your currently playing last.fm item via a shortcode
  * Version:				1.0.0
  * Requires at least:	5.0
